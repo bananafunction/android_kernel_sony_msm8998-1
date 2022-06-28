@@ -1464,7 +1464,7 @@ static int smack_inode_removexattr(struct dentry *dentry, const char *name)
  *
  * Returns the size of the attribute or an error code
  */
-static int smack_inode_getsecurity(const struct inode *inode,
+static int smack_inode_getsecurity(struct inode *inode,
 				   const char *name, void **buffer,
 				   bool alloc)
 {
@@ -1530,7 +1530,7 @@ static int smack_inode_listsecurity(struct inode *inode, char *buffer,
  * @inode: inode to extract the info from
  * @secid: where result will be saved
  */
-static void smack_inode_getsecid(const struct inode *inode, u32 *secid)
+static void smack_inode_getsecid(struct inode *inode, u32 *secid)
 {
 	struct inode_smack *isp = inode->i_security;
 
@@ -2225,25 +2225,6 @@ static int smack_task_kill(struct task_struct *p, struct siginfo *info,
 	rc = smk_access(skp, tkp, MAY_WRITE, &ad);
 	rc = smk_bu_note("USB signal", skp, tkp, MAY_WRITE, rc);
 	return rc;
-}
-
-/**
- * smack_task_wait - Smack access check for waiting
- * @p: task to wait for
- *
- * Returns 0
- */
-static int smack_task_wait(struct task_struct *p)
-{
-	/*
-	 * Allow the operation to succeed.
-	 * Zombies are bad.
-	 * In userless environments (e.g. phones) programs
-	 * get marked with SMACK64EXEC and even if the parent
-	 * and child shouldn't be talking the parent still
-	 * may expect to know when the child exits.
-	 */
-	return 0;
 }
 
 /**
@@ -4578,7 +4559,7 @@ static int smack_inode_getsecctx(struct inode *inode, void **ctx, u32 *ctxlen)
 	return 0;
 }
 
-static struct security_hook_list smack_hooks[] = {
+static struct security_hook_list smack_hooks[] __lsm_ro_after_init = {
 	LSM_HOOK_INIT(ptrace_access_check, smack_ptrace_access_check),
 	LSM_HOOK_INIT(ptrace_traceme, smack_ptrace_traceme),
 	LSM_HOOK_INIT(syslog, smack_syslog),
@@ -4645,7 +4626,6 @@ static struct security_hook_list smack_hooks[] = {
 	LSM_HOOK_INIT(task_getscheduler, smack_task_getscheduler),
 	LSM_HOOK_INIT(task_movememory, smack_task_movememory),
 	LSM_HOOK_INIT(task_kill, smack_task_kill),
-	LSM_HOOK_INIT(task_wait, smack_task_wait),
 	LSM_HOOK_INIT(task_to_inode, smack_task_to_inode),
 
 	LSM_HOOK_INIT(ipc_permission, smack_ipc_permission),
@@ -4802,7 +4782,7 @@ static __init int smack_init(void)
 	/*
 	 * Register with LSM
 	 */
-	security_add_hooks(smack_hooks, ARRAY_SIZE(smack_hooks));
+	security_add_hooks(smack_hooks, ARRAY_SIZE(smack_hooks), "smack");
 
 	return 0;
 }

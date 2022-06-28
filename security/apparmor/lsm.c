@@ -605,7 +605,7 @@ static int apparmor_task_setrlimit(struct task_struct *task,
 	return error;
 }
 
-static struct security_hook_list apparmor_hooks[] = {
+static struct security_hook_list apparmor_hooks[] __lsm_ro_after_init = {
 	LSM_HOOK_INIT(ptrace_access_check, apparmor_ptrace_access_check),
 	LSM_HOOK_INIT(ptrace_traceme, apparmor_ptrace_traceme),
 	LSM_HOOK_INIT(capget, apparmor_capget),
@@ -901,7 +901,8 @@ static int __init apparmor_init(void)
 		aa_free_root_ns();
 		goto alloc_out;
 	}
-	security_add_hooks(apparmor_hooks, ARRAY_SIZE(apparmor_hooks));
+	security_add_hooks(apparmor_hooks, ARRAY_SIZE(apparmor_hooks),
+				"apparmor");
 
 	/* Report that AppArmor successfully initialized */
 	apparmor_initialized = 1;

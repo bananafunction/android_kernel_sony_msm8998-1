@@ -36,6 +36,12 @@ struct task_security_struct {
 	u32 sockcreate_sid;	/* fscreate SID */
 };
 
+enum label_initialized {
+	LABEL_INVALID,		/* invalid or not initialized */
+	LABEL_INITIALIZED,	/* initialized */
+	LABEL_PENDING
+};
+
 struct inode_security_struct {
 	struct inode *inode;	/* back pointer to inode object */
 	union {
@@ -48,7 +54,7 @@ struct inode_security_struct {
 	unsigned char initialized;	/* initialization flag */
 	u32 tag;		/* Per-File-Encryption tag */
 	void *pfk_data; /* Per-File-Key data from ecryptfs */
-	struct mutex lock;
+	spinlock_t lock;
 };
 
 struct file_security_struct {
@@ -59,7 +65,6 @@ struct file_security_struct {
 };
 
 struct superblock_security_struct {
-	struct super_block *sb;		/* back pointer to sb object */
 	u32 sid;			/* SID of file system superblock */
 	u32 def_sid;			/* default SID for labeling */
 	u32 mntpoint_sid;		/* SECURITY_FS_USE_MNTPOINT context for files */
